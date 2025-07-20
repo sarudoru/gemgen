@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { Sparkles, Wand2, Download, Heart, Zap, Palette, Gem } from 'lucide-react'
+import { Sparkles, Download, Heart, Zap, Palette, Gem } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { RainbowButton } from '@/components/ui/rainbow-button'
 import { AuroraText } from '@/components/ui/aurora-text'
+import { AnimatedGradientTextDemo } from "@/components/magicui/animated-gradient-text"
 
 const styles = [
   { id: 1, name: 'Cyberpunk', gradient: 'from-pink-500 to-purple-600' },
@@ -635,6 +636,8 @@ export default function HomePage() {
       
       {/* Hero Section */}
       <section className="pt-32 text-center relative overflow-hidden">
+
+      <AnimatedGradientTextDemo>The waitlists are open!</AnimatedGradientTextDemo>
         
         <div className="container mx-auto px-6">
           <motion.div 
@@ -643,9 +646,6 @@ export default function HomePage() {
             transition={{ duration: 0.8 }}
             className="max-w-4xl mx-auto"
           >
-            <div className="inline-block bg-purple-100 text-purple-700 text-sm font-semibold px-4 py-1 rounded-full mb-4">
-              ✨ No-code AI asset generation
-            </div>
             <h1 className="font-[Inter] font-semibold mb-[3.5rem] leading-tight" style={{ fontSize: '3.3rem'}}>
               Create <AuroraText>Stunning</AuroraText> Visuals with a Single Prompt
             </h1>
@@ -655,28 +655,31 @@ export default function HomePage() {
         <div className="container mx-auto px-6">
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 mx-36 mb-[4.5rem]">
               {styles.map((style, index) => (
-                <motion.div>
-                  <Card 
-                    className={`group cursor-pointer transition-all duration-300 overflow-hidden border-2 rounded-xl hover:shadow-xl ${
-                      selectedStyle === style.id 
-                        ? 'border-primary ring-4 ring-primary/20' 
-                        : 'border-gray-200 hover:border-primary'
-                    }`}
-                    onClick={() => setSelectedStyle(style.id)}
-                  >
-                    <CardContent className="p-0">
-                      <div className="relative aspect-square">
-                        <div className="absolute inset-0 bg-black/20" />
-                        <h3 className="absolute bottom-3 left-3 text-white font-semibold text-lg drop-shadow-md">{style.name}</h3>
-                        {selectedStyle === style.id && (
-                          <div className="absolute top-2 right-2 bg-primary text-white rounded-full p-1.5 shadow-lg">
-                            <Heart className="w-4 h-4 fill-current" />
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                                 <motion.div>
+                   <Card 
+                     data-glow
+                     className={`glow-card group cursor-pointer transition-all duration-300 overflow-hidden border-2 rounded-xl hover:shadow-xl ${
+                       selectedStyle === style.id 
+                         ? 'border-primary ring-4 ring-primary/20' 
+                         : 'border-gray-200 hover:border-primary'
+                     }`}
+                     onClick={() => setSelectedStyle(style.id)}
+                   >
+                     <span data-glow />
+                     <CardContent className="p-0 relative z-10">
+                       <div className="relative aspect-square">
+                         <div className={cn("absolute inset-0 bg-gradient-to-br transition-transform duration-300 group-hover:scale-105", style.gradient)} />
+                         <div className="absolute inset-0 bg-black/20" />
+                         <h3 className="absolute bottom-3 left-3 text-white font-semibold text-lg drop-shadow-md">{style.name}</h3>
+                         {selectedStyle === style.id && (
+                           <div className="absolute top-2 right-2 bg-primary text-white rounded-full p-1.5 shadow-lg">
+                             <Heart className="w-4 h-4 fill-current" />
+                           </div>
+                         )}
+                       </div>
+                     </CardContent>
+                   </Card>
+                 </motion.div>
               ))}
             </div>
             <div className="max-w-2xl mx-auto">
@@ -691,9 +694,10 @@ export default function HomePage() {
                   <RainbowButton 
                       size="lg"
                       disabled={!prompt.trim() || !selectedStyle || isGenerating}
+                      onClick={handleGenerate}
                     >
                       {isGenerating ? 'Generating...' : 'Generate'}
-                    </RainbowButton>
+                  </RainbowButton>
                   </div>
               </div>
         </div>

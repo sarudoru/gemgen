@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+  apiKey: )
 
 const stylePrompts = {
   1: 'in cyberpunk style with neon colors and futuristic elements',
@@ -35,11 +34,8 @@ export async function POST(request: NextRequest) {
     const fullPrompt = `${prompt} ${stylePrompt}`
 
     const response = await openai.images.generate({
-      model: "dall-e-3",
+      model: "gpt-image-1",
       prompt: fullPrompt,
-      n: 1,
-      size: "1024x1024",
-      quality: "standard",
     })
 
     const imageUrl = response.data[0].url
@@ -52,7 +48,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('OpenAI API error:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to generate image' },
+      { success: false, error: 'Failed to generate image: ' + error },
       { status: 500 }
     )
   }
