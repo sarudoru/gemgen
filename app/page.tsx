@@ -659,19 +659,19 @@ export default function HomePage() {
                    <Card 
                      data-glow
                      className={`glow-card group cursor-pointer transition-all duration-300 overflow-hidden border-2 rounded-xl hover:shadow-xl ${
-                       selectedStyle === style.id 
+                       selectedStyle === style?.id 
                          ? 'border-primary ring-4 ring-primary/20' 
                          : 'border-gray-200 hover:border-primary'
                      }`}
-                     onClick={() => setSelectedStyle(style.id)}
+                     onClick={() => setSelectedStyle(style?.id ?? null)}
                    >
                      <span data-glow />
                      <CardContent className="p-0 relative z-10">
                        <div className="relative aspect-square">
-                         <div className={cn("absolute inset-0 bg-gradient-to-br transition-transform duration-300 group-hover:scale-105", style.gradient)} />
+                         <div className={cn("absolute inset-0 bg-gradient-to-br transition-transform duration-300 group-hover:scale-105", style?.gradient)} />
                          <div className="absolute inset-0 bg-black/20" />
-                         <h3 className="absolute bottom-3 left-3 text-white font-semibold text-lg drop-shadow-md">{style.name}</h3>
-                         {selectedStyle === style.id && (
+                         <h3 className="absolute bottom-3 left-3 text-white font-semibold text-lg drop-shadow-md">{style?.name}</h3>
+                         {style && selectedStyle === style.id && (
                            <div className="absolute top-2 right-2 bg-primary text-white rounded-full p-1.5 shadow-lg">
                              <Heart className="w-4 h-4 fill-current" />
                            </div>
