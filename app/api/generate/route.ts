@@ -35,11 +35,18 @@ export async function POST(request: NextRequest) {
     const fullPrompt = `${prompt} ${stylePrompt}`
 
     const response = await openai.images.generate({
-      model: "gpt-image-1",
+      model: "dall-e-2",
       prompt: fullPrompt,
-    })
+    });
 
-    const imageUrl = response.data[0].url
+    const imageUrl = response.data?.[0]?.url;
+
+    if (!imageUrl) {
+      return NextResponse.json(
+        { success: false, error: "Image could not be generated." },
+        { status: 500 },
+      );
+    }
 
     return NextResponse.json({
       success: true,
