@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
 const openai = new OpenAI({
-  apiKey: )
+  apiKey: process.env.OPENAI_API_KEY,
+})
 
 const stylePrompts = {
   1: 'in cyberpunk style with neon colors and futuristic elements',
