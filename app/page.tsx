@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { Sparkles, Download, Heart, Zap, Palette, Gem } from 'lucide-react'
+import { Sparkles, Heart, Zap, Palette, Gem } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { RainbowButton } from '@/components/ui/rainbow-button'
@@ -12,16 +12,16 @@ import { AuroraText } from '@/components/ui/aurora-text'
 import { AnimatedGradientTextDemo } from "@/components/magicui/animated-gradient-text"
 
 const styles = [
-  { id: 1, name: 'Cyberpunk', gradient: 'from-pink-500 to-purple-600' },
-  { id: 2, name: 'Minimalist', gradient: 'from-gray-100 to-gray-300' },
-  { id: 3, name: 'Watercolor', gradient: 'from-blue-300 to-green-300' },
-  { id: 4, name: 'Digital Art', gradient: 'from-teal-400 to-cyan-500' },
-  { id: 5, name: 'Abstract', gradient: 'from-yellow-400 to-orange-500' },
-  { id: 6, name: 'Photorealistic', gradient: 'from-slate-400 to-gray-500' },
-  { id: 7, name: 'Cartoon', gradient: 'from-red-400 to-yellow-400' },
-  { id: 8, name: 'Vintage', gradient: 'from-amber-400 to-orange-600' },
-  { id: 9, name: 'Neon', gradient: 'from-lime-400 to-green-500' },
-  { id: 10, name: '+ More coming soon', gradient: 'from-fuchsia-300 to-pink-400' },,
+  { id: 1, name: 'Cyberpunk', image: 'https://i.pinimg.com/1200x/7b/a5/3d/7ba53df1228d016e061d639d9d4a2307.jpg' },
+  { id: 2, name: 'Airbnb Style', image: 'https://sref-code.com/wp-content/uploads/2025/05/random_sref-code.comAirbnb-style-Icons-JSON-GPT-4o-GPT-Image-1.jpeg' },
+  { id: 3, name: 'Neumorphism', image: 'https://i.pinimg.com/1200x/0e/4c/08/0e4c08e331276a5365439f7ba41f97a4.jpg' },
+  { id: 4, name: 'Glassmorphism', image: 'https://i.pinimg.com/1200x/fb/bd/1f/fbbd1f77ffccf52e076d034cd0bba069.jpg' },
+  { id: 5, name: 'Flat Design', image: 'https://i.pinimg.com/1200x/18/16/6d/18166de5c40fe6243016471edb15b4cb.jpg' },
+  { id: 6, name: 'Anime Style', image: 'https://i.pinimg.com/1200x/cb/4d/ad/cb4dad94bbb1e7c4eb1f603a973bd379.jpg' },
+  { id: 7, name: 'Outline', image: 'https://i.pinimg.com/1200x/a8/96/98/a89698be75d9135aee728d02528883e3.jpg' },
+  { id: 8, name: 'Pixel Art', image: 'https://i.pinimg.com/1200x/76/4f/a4/764fa47c0ca0b4d481849e140deb4ab0.jpg' },
+  { id: 9, name: '80s Vintage', image: 'https://i.pinimg.com/1200x/9b/af/7f/9baf7f9a72e02968e0de972254dcb491.jpg' },
+  { id: 10, name: '+ More coming soon', image: 'https://i.pinimg.com/1200x/a6/e1/95/a6e195c436e0f6ccf57d825d4fc7ed70.jpg' }
 ]
 
 const features = [
@@ -52,8 +52,10 @@ const testimonials = [
 export default function HomePage() {
   const [prompt, setPrompt] = useState('')
   const [selectedStyle, setSelectedStyle] = useState<number | null>(null)
-  const [generatedImage, setGeneratedImage] = useState<string | null>(null)
-  const [isGenerating, setIsGenerating] = useState(false)
+  const [showNotification, setShowNotification] = useState(false)
+  const [waitlistEmail, setWaitlistEmail] = useState('')
+  const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [waitlistMessage, setWaitlistMessage] = useState('')
 
   useEffect(() => {
     // Initialize sparkle button particles
@@ -112,28 +114,49 @@ export default function HomePage() {
   }, [])
 
   const handleGenerate = async () => {
-    if (!prompt.trim() || !selectedStyle) return
+    setShowNotification(true)
+    setTimeout(() => setShowNotification(false), 5000) // Hide after 5 seconds
+  }
+
+  const handleWaitlistSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     
-    setIsGenerating(true)
+    if (!waitlistEmail.trim() || !waitlistEmail.includes('@')) {
+      setWaitlistStatus('error')
+      setWaitlistMessage('Please enter a valid email address')
+      return
+    }
+
+    setWaitlistStatus('loading')
+    setWaitlistMessage('')
+
     try {
-      const response = await fetch('/api/generate', {
+      const response = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          prompt, 
-          styleId: selectedStyle 
-        }),
+        body: JSON.stringify({ email: waitlistEmail }),
       })
-      
+
       const data = await response.json()
+
       if (data.success) {
-        setGeneratedImage(data.imageUrl)
+        setWaitlistStatus('success')
+        setWaitlistMessage('🎉 Thanks for joining! We\'ll be in touch soon.')
+        setWaitlistEmail('')
+      } else {
+        setWaitlistStatus('error')
+        setWaitlistMessage(data.error || 'Something went wrong. Please try again.')
       }
     } catch (error) {
-      console.error('Generation failed:', error)
-    } finally {
-      setIsGenerating(false)
+      setWaitlistStatus('error')
+      setWaitlistMessage('Network error. Please try again.')
     }
+
+    // Clear status after 5 seconds
+    setTimeout(() => {
+      setWaitlistStatus('idle')
+      setWaitlistMessage('')
+    }, 5000)
   }
 
   return (
@@ -623,21 +646,32 @@ export default function HomePage() {
         <div className="container mx-auto px-6 py-3 flex justify-between items-center">
           <div className="flex items-center space-x-2">
             <Gem className="w-6 h-6 text-purple-600" />
-            <span className="text-xl font-bold">StyleGen</span>
+            <span className="text-xl font-bold"><a href="#hero">StyleGen</a></span>
           </div>
           <div className="hidden md:flex items-center space-x-6">
             <a href="#features" className="hover:text-primary transition-colors">Features</a>
             <a href="#gallery" className="hover:text-primary transition-colors">Gallery</a>
             <a href="#testimonials" className="hover:text-primary transition-colors">Testimonials</a>
+            <a href="#faq" className="hover:text-primary transition-colors">FAQ</a>
+            <a href="#waitlist" className="hover:text-primary transition-colors">Waitlist</a>
           </div>
-          <Button>Get Started</Button>
+          <Button onClick={() => {
+            const el = document.getElementById('waitlist');
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}>
+            Get Started
+          </Button>
         </div>
       </nav>
       
       {/* Hero Section */}
-      <section className="pt-32 text-center relative overflow-hidden">
+      <section id="hero" className="pt-32 text-center relative overflow-hidden">
 
-      <AnimatedGradientTextDemo>The waitlists are open!</AnimatedGradientTextDemo>
+      <a href="#waitlist">
+        <AnimatedGradientTextDemo>The waitlists are open!</AnimatedGradientTextDemo>
+      </a>
         
         <div className="container mx-auto px-6">
           <motion.div 
@@ -668,7 +702,11 @@ export default function HomePage() {
                      <span data-glow />
                      <CardContent className="p-0 relative z-10">
                        <div className="relative aspect-square">
-                         <div className={cn("absolute inset-0 bg-gradient-to-br transition-transform duration-300 group-hover:scale-105", style?.gradient)} />
+                         <img 
+                           src={style.image} 
+                           alt={style.name}
+                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                         />
                          <div className="absolute inset-0 bg-black/20" />
                          <h3 className="absolute bottom-3 left-3 text-white font-semibold text-lg drop-shadow-md">{style?.name}</h3>
                          {style && selectedStyle === style.id && (
@@ -693,11 +731,22 @@ export default function HomePage() {
                 <div className="flex flex-col items-center mt-4">
                   <RainbowButton 
                       size="lg"
-                      disabled={!prompt.trim() || !selectedStyle || isGenerating}
                       onClick={handleGenerate}
                     >
-                      {isGenerating ? 'Generating...' : 'Generate'}
+                      Generate Amazing Visuals
                   </RainbowButton>
+                  {showNotification && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg shadow-lg max-w-md text-center"
+                    >
+                      <p className="text-blue-800 font-medium">
+                        🎨 Ready to create? Join our waitlist below to get early access!
+                      </p>
+                    </motion.div>
+                  )}
                   </div>
               </div>
         </div>
@@ -709,22 +758,22 @@ export default function HomePage() {
         
       </section>
 
-      {/* Craft of UI Section */}
+      {/* Craft of AI Section */}
       <section className="py-20 bg-white craft-section">
         <div className="container mx-auto px-6 text-center relative z-10">
-          <h1 className="fluid mb-6">the craft of ui</h1>
+          <h1 className="fluid mb-6">the craft of ai visuals</h1>
           <p className="mb-16">
-            Unlock the art and science of interface development. This isn't just about
-            pushing pixels or following documentation — it's about mastering the
-            tools, understanding the nuances, and shaping experiences with intention.
+            Transform your creative vision into stunning reality. StyleGen isn't just about
+            generating images — it's about mastering the art of AI-powered creativity,
+            understanding style nuances, and bringing your ideas to life with precision.
           </p>
           <ul className="craft-ul">
             <li data-active="true">
               <article>
-                <h3>The Craft</h3>
+                <h3>Style Mastery</h3>
                 <p>
-                  Gain the confidence to build anything you envision, transforming
-                  motion, interaction, and design principles into second nature.
+                  Master the art of visual consistency across all your projects. From
+                  cyberpunk aesthetics to elegant minimalism, discover your signature style.
                 </p>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -734,22 +783,20 @@ export default function HomePage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <path d="M6 3h12l4 6-10 13L2 9Z" />
-                  <path d="M11 3 8 9l4 13 4-13-3-6" />
-                  <path d="M2 9h20" />
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
                 <a href="#">
-                  <span>Watch now</span>
+                  <span>Explore Styles</span>
                 </a>
-                <img src="https://picsum.photos/720/720?random=12" alt="" />
+                <img src="https://i.pinimg.com/1200x/7b/a5/3d/7ba53df1228d016e061d639d9d4a2307.jpg" alt="" />
               </article>
             </li>
             <li>
               <article>
-                <h3>CSS Animation</h3>
+                <h3>Prompt Engineering</h3>
                 <p>
-                  Master CSS animations from your very first set of @keyframes right
-                  through to things no one else ever teaches you.
+                  Craft the perfect prompts to bring your vision to life. Learn the
+                  secrets of effective AI communication for stunning results.
                 </p>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -760,25 +807,18 @@ export default function HomePage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <rect width="18" height="18" x="3" y="3" rx="2" />
-                  <path d="M7 3v18" />
-                  <path d="M3 7.5h4" />
-                  <path d="M3 12h18" />
-                  <path d="M3 16.5h4" />
-                  <path d="M17 3v18" />
-                  <path d="M17 7.5h4" />
-                  <path d="M17 16.5h4" />
+                  <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
                 </svg>
-                <a href="#"><span>Watch now</span></a>
-                <img src="https://picsum.photos/720/720?random=17" alt="" />
+                <a href="#"><span>Learn More</span></a>
+                <img src="https://i.pinimg.com/1200x/fb/bd/1f/fbbd1f77ffccf52e076d034cd0bba069.jpg" alt="" />
               </article>
             </li>
             <li>
               <article>
-                <h3>SVG Filters</h3>
+                <h3>Brand Consistency</h3>
                 <p>
-                  Shaders on a budget. Learn how to use noise to your advantage whilst
-                  making flames and stickers.
+                  Maintain perfect brand alignment across all your visual content.
+                  Create cohesive campaigns that tell your story beautifully.
                 </p>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -789,18 +829,19 @@ export default function HomePage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1" />
                 </svg>
-                <a href="#"><span>Watch now</span></a>
-                <img src="https://picsum.photos/720/720?random=19" alt="" />
+                <a href="#"><span>View Examples</span></a>
+                <img src="https://i.pinimg.com/1200x/18/16/6d/18166de5c40fe6243016471edb15b4cb.jpg" alt="" />
               </article>
             </li>
             <li>
               <article>
-                <h3>Scroll Animation</h3>
+                <h3>Creative Workflows</h3>
                 <p>
-                  Take your users on a journey with the joy of tasteful scroll
-                  animation. You might not even need JavaScript.
+                  Streamline your creative process from concept to final output.
+                  Discover efficient workflows that maximize your productivity.
                 </p>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -811,21 +852,20 @@ export default function HomePage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <path d="M19 17V5a2 2 0 0 0-2-2H4" />
-                  <path
-                    d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"
-                  />
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                  <polyline points="3.27,6.96 12,12.01 20.73,6.96" />
+                  <line x1="12" y1="22.08" x2="12" y2="12" />
                 </svg>
-                <a href="#"><span>Watch now</span></a>
-                <img src="https://picsum.photos/720/720?random=42" alt="" />
+                <a href="#waitlist"><span>Get Started</span></a>
+                <img src="https://i.pinimg.com/1200x/0e/4c/08/0e4c08e331276a5365439f7ba41f97a4.jpg" alt="" />
               </article>
             </li>
             <li>
               <article>
-                <h3>Taming Canvas</h3>
+                <h3>AI Artistry</h3>
                 <p>
-                  Grasp how to tame the pixel playground and when to do so. Whilst
-                  building with "Performance Driven Development".
+                  Push the boundaries of AI-generated art. Explore advanced techniques
+                  and unlock the full creative potential of artificial intelligence.
                 </p>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -836,24 +876,22 @@ export default function HomePage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
-                  <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
-                  <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
-                  <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
-                  <path
-                    d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"
-                  />
+                  <path d="M9 12l2 2 4-4" />
+                  <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3" />
+                  <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3" />
+                  <path d="M12 3c0 1-1 3-3 3s-3-2-3-3 1-3 3-3 3 2 3 3" />
+                  <path d="M12 21c0-1 1-3 3-3s3 2 3 3-1 3-3 3-3-2-3-3" />
                 </svg>
-                <a href="#"><span>Watch now</span></a>
-                <img src="https://picsum.photos/720/720?random=128" alt="" />
+                <a href="#"><span>Discover Art</span></a>
+                <img src="https://i.pinimg.com/1200x/cb/4d/ad/cb4dad94bbb1e7c4eb1f603a973bd379.jpg" alt="" />
               </article>
             </li>
             <li>
               <article>
-                <h3>Layout Tricks</h3>
+                <h3>Visual Storytelling</h3>
                 <p>
-                  Do you really need a library for that? Sometimes stepping back and
-                  rethinking the problem yields a nifty solution.
+                  Transform ideas into compelling visual narratives. Learn how to
+                  craft images that communicate, inspire, and captivate audiences.
                 </p>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -864,27 +902,20 @@ export default function HomePage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <path
-                    d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"
-                  />
-                  <path d="m14 7 3 3" />
-                  <path d="M5 6v4" />
-                  <path d="M19 14v4" />
-                  <path d="M10 2v2" />
-                  <path d="M7 8H3" />
-                  <path d="M21 16h-4" />
-                  <path d="M11 3H9" />
+                  <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                  <circle cx="9" cy="9" r="2" />
+                  <path d="M21 15l-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
                 </svg>
-                <a href="#"><span>Watch now</span></a>
-                <img src="https://picsum.photos/720/720?random=56" alt="" />
+                <a href="#"><span>Tell Stories</span></a>
+                <img src="https://i.pinimg.com/1200x/a8/96/98/a89698be75d9135aee728d02528883e3.jpg" alt="" />
               </article>
             </li>
             <li>
               <article>
-                <h3>Mastering Time</h3>
+                <h3>Future Trends</h3>
                 <p>
-                  It's not all just easings and compositions. Time plays a crucial
-                  part in various UI patterns that might not seem obvious at first.
+                  Stay ahead of the curve with emerging visual trends and AI innovations.
+                  Prepare for tomorrow's creative landscape today.
                 </p>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -895,54 +926,17 @@ export default function HomePage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <path d="M5 22h14" />
-                  <path d="M5 2h14" />
-                  <path
-                    d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"
-                  />
-                  <path
-                    d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"
-                  />
+                  <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
                 </svg>
-                <a href="#"><span>Watch now</span></a>
-                <img src="https://picsum.photos/720/720?random=39" alt="" />
+                <a href="#"><span>See Future</span></a>
+                <img src="https://i.pinimg.com/1200x/9b/af/7f/9baf7f9a72e02968e0de972254dcb491.jpg" alt="" />
               </article>
             </li>
           </ul>
         </div>
       </section>
 
-      {/* Generated Result */}
-      {generatedImage && (
-        <section className="py-20">
-          <div className="container mx-auto px-6 text-center">
-            <h2 className="text-4xl font-bold mb-8">Your Masterpiece</h2>
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-              className="max-w-2xl mx-auto border-4 border-gray-200 rounded-2xl p-4 shadow-2xl bg-white"
-            >
-              <div className="relative aspect-square rounded-xl overflow-hidden">
-                <img
-                  src={generatedImage}
-                  alt="Generated artwork"
-                  className="object-contain w-full h-full"
-                />
-              </div>
-              <div className="flex justify-center mt-6 space-x-4">
-                <Button size="lg">
-                  <Download className="w-5 h-5 mr-2" />
-                  Download
-                </Button>
-                <Button variant="outline" size="lg" onClick={() => setGeneratedImage(null)}>
-                  Create Another
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-      )}
+
 
       {/* Features Section */}
       <section id="features" className="py-20 bg-white">
@@ -1052,10 +1046,38 @@ export default function HomePage() {
         <div className="container mx-auto px-6 relative z-10 text-center">
           <h2 className="text-5xl font-bold mb-6">Be the First to Try StyleGen</h2>
           <p className="text-xl text-muted-foreground mb-8">Join our waitlist and get early access, exclusive perks, and more.</p>
-          <form className="max-w-lg mx-auto flex flex-col sm:flex-row gap-4">
-            <input type="email" required placeholder="Your email address" className="flex-1 px-5 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none" />
-            <Button size="lg" className="px-8">Join Waitlist</Button>
+          <form onSubmit={handleWaitlistSubmit} className="max-w-lg mx-auto flex flex-col sm:flex-row gap-4">
+            <input 
+              type="email" 
+              required 
+              placeholder="Your email address" 
+              value={waitlistEmail}
+              onChange={(e) => setWaitlistEmail(e.target.value)}
+              disabled={waitlistStatus === 'loading'}
+              className="flex-1 px-5 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none disabled:opacity-50" 
+            />
+            <Button 
+              type="submit"
+              size="lg" 
+              className="px-8"
+              disabled={waitlistStatus === 'loading'}
+            >
+              {waitlistStatus === 'loading' ? 'Joining...' : 'Join Waitlist'}
+            </Button>
           </form>
+          {waitlistMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`mt-4 p-4 rounded-lg text-center max-w-lg mx-auto ${
+                waitlistStatus === 'success' 
+                  ? 'bg-green-50 border border-green-200 text-green-800' 
+                  : 'bg-red-50 border border-red-200 text-red-800'
+              }`}
+            >
+              {waitlistMessage}
+            </motion.div>
+          )}
         </div>
       </section>
 
