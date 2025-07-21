@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     // Send email notification using Resend
     try {
       const emailResult = await resend.emails.send({
-        from: 'StyleGen <noreply@resend.dev>', // You can customize this domain later
+        from: 'sardor@nodirov.com', // You can customize this domain later
         to: 'sardornodirov.25@gmail.com',
         subject: '🎨 New StyleGen Waitlist Signup!',
         html: `
